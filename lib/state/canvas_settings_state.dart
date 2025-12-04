@@ -5,22 +5,26 @@ class CanvasSettings {
   final bool showGrid;
   final bool snapToGrid;
   final double gridSize;
+  final bool isDrawingMode;
 
   const CanvasSettings({
     this.showGrid = false,
     this.snapToGrid = false,
     this.gridSize = 20.0,
+    this.isDrawingMode = false,
   });
 
   CanvasSettings copyWith({
     bool? showGrid,
     bool? snapToGrid,
     double? gridSize,
+    bool? isDrawingMode,
   }) {
     return CanvasSettings(
       showGrid: showGrid ?? this.showGrid,
       snapToGrid: snapToGrid ?? this.snapToGrid,
       gridSize: gridSize ?? this.gridSize,
+      isDrawingMode: isDrawingMode ?? this.isDrawingMode,
     );
   }
 }
@@ -40,6 +44,10 @@ class CanvasSettingsNotifier extends Notifier<CanvasSettings> {
 
   void updateGridSize(double size) {
     state = state.copyWith(gridSize: size);
+  }
+
+  void toggleDrawingMode() {
+    state = state.copyWith(isDrawingMode: !state.isDrawingMode);
   }
 }
 

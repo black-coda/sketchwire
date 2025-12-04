@@ -5,7 +5,15 @@ import 'package:uuid/uuid.dart';
 
 // --- Models ---
 
-enum SketchElementType { text, button, input, container, image, circle }
+enum SketchElementType {
+  text,
+  button,
+  input,
+  container,
+  image,
+  circle,
+  freehand,
+}
 
 class SketchElement {
   final String id;
@@ -13,6 +21,7 @@ class SketchElement {
   final Offset position;
   final String? text;
   final Size? size; // For container, image, circle
+  final List<Offset>? points; // For freehand
   // Add more properties as needed (color, style, etc.)
 
   SketchElement({
@@ -21,6 +30,7 @@ class SketchElement {
     required this.position,
     this.text,
     this.size,
+    this.points,
   });
 
   SketchElement copyWith({
@@ -29,6 +39,7 @@ class SketchElement {
     Offset? position,
     String? text,
     Size? size,
+    List<Offset>? points,
   }) {
     return SketchElement(
       id: id ?? this.id,
@@ -36,6 +47,7 @@ class SketchElement {
       position: position ?? this.position,
       text: text ?? this.text,
       size: size ?? this.size,
+      points: points ?? this.points,
     );
   }
 
@@ -48,6 +60,7 @@ class SketchElement {
       'size': size != null
           ? {'width': size!.width, 'height': size!.height}
           : null,
+      'points': points?.map((p) => {'dx': p.dx, 'dy': p.dy}).toList(),
     };
   }
 
@@ -59,6 +72,11 @@ class SketchElement {
       text: json['text'],
       size: json['size'] != null
           ? Size(json['size']['width'], json['size']['height'])
+          : null,
+      points: json['points'] != null
+          ? (json['points'] as List)
+                .map((p) => Offset(p['dx'], p['dy']))
+                .toList()
           : null,
     );
   }
@@ -103,6 +121,14 @@ class CanvasNotifier extends Notifier<CanvasState> {
     return CanvasState();
   }
 
+  // Temp buffer to avoid constant state updates
+  List<Offset> _tempPoints = [];
+  String? _currentDrawingId;
+
+  void resetCanvas() {
+    state = CanvasState();
+  }
+
   void addElement(SketchElementType type, Offset position) {
     final id = const Uuid().v4();
     String? initialText;
@@ -127,6 +153,9 @@ class CanvasNotifier extends Notifier<CanvasState> {
       case SketchElementType.circle:
         initialSize = const Size(80, 80);
         break;
+      case SketchElementType.freehand:
+        // Freehand elements start with no size/points, points are added during drag
+        break;
     }
 
     final newElement = SketchElement(
@@ -135,6 +164,7 @@ class CanvasNotifier extends Notifier<CanvasState> {
       position: position,
       text: initialText,
       size: initialSize,
+      points: type == SketchElementType.freehand ? [position] : null,
     );
 
     state = CanvasState(
@@ -235,7 +265,7 @@ class CanvasNotifier extends Notifier<CanvasState> {
         if (e.id == state.selectedElementId!) {
           return e.copyWith(
             size: Size(newWidth, newHeight),
-            // position: Offset(newX, newY),
+            position: Offset(newX, newY),
           );
         }
         return e;
@@ -249,6 +279,128 @@ class CanvasNotifier extends Notifier<CanvasState> {
 
   void endResize() {
     state = state.copyWith(selectedElementId: state.selectedElementId);
+  }
+
+  void startFreehand(Offset startPoint) {
+    if (state.selectedElementId == null) return;
+
+    final id = const Uuid().v4();
+    _currentDrawingId = id;
+    _tempPoints = [Offset.zero];
+    final newElement = SketchElement(
+      id: id,
+      type: SketchElementType.freehand,
+      position: startPoint,
+      points: [Offset.zero],
+    );
+
+    state = CanvasState(
+      elements: [...state.elements, newElement],
+      selectedElementId: id,
+    );
+  }
+
+  // void updateFreehand(Offset point) {
+  //   if (state.selectedElementId == null) return;
+
+  //   state = state.copyWith(
+  //     elements: state.elements.map((e) {
+  //       if (e.id == state.selectedElementId && e.type == SketchElementType.freehand) {
+  //         final relativePoint = point - e.position;
+  //         return e.copyWith(
+  //           points: [...?e.points, relativePoint],
+  //         );
+  //       }
+  //       return e;
+  //     }).toList(),
+  //   );
+  // }
+
+  void updateFreehand(Offset point) {
+    if (_currentDrawingId == null) return;
+
+    final currentElement = state.elements.firstWhere(
+      (e) => e.id == _currentDrawingId,
+    );
+
+    final relativePoint = point - currentElement.position;
+
+    // Distance check - only add if moved enough
+    if (_tempPoints.isEmpty ||
+        (relativePoint - _tempPoints.last).distance > 2.0) {
+      _tempPoints.add(relativePoint);
+
+      // Update every 5 points instead of every 3
+      if (_tempPoints.length % 5 == 0) {
+        _updateCurrentElement();
+      }
+    }
+  }
+
+  void _updateCurrentElement() {
+    state = state.copyWith(
+      elements: state.elements.map((e) {
+        if (e.id == _currentDrawingId) {
+          return e.copyWith(points: List.from(_tempPoints));
+        }
+        return e;
+      }).toList(),
+    );
+  }
+
+  void endFreehand() {
+    if (_currentDrawingId == null) return;
+
+    // Calculate bounding box
+    double minX = double.infinity;
+    double minY = double.infinity;
+    double maxX = double.negativeInfinity;
+    double maxY = double.negativeInfinity;
+
+    for (final point in _tempPoints) {
+      if (point.dx < minX) minX = point.dx;
+      if (point.dy < minY) minY = point.dy;
+      if (point.dx > maxX) maxX = point.dx;
+      if (point.dy > maxY) maxY = point.dy;
+    }
+
+    // Handle single point case
+    if (minX == double.infinity) {
+      minX = 0;
+      minY = 0;
+      maxX = 0;
+      maxY = 0;
+    }
+
+    // Add some padding
+    // minX -= 2;
+    // minY -= 2;
+    // maxX += 2;
+    // maxY += 2;
+
+    final boundsOffset = Offset(minX, minY);
+    final size = Size(maxX - minX, maxY - minY);
+
+    // Normalize points
+    final normalizedPoints = _tempPoints.map((p) => p - boundsOffset).toList();
+
+    // Final update with all points and new bounds
+    state = state.copyWith(
+      elements: state.elements.map((e) {
+        if (e.id == _currentDrawingId) {
+          return e.copyWith(
+            position: e.position + boundsOffset,
+            size: size,
+            points: normalizedPoints,
+          );
+        }
+        return e;
+      }).toList(),
+    );
+
+    // Clean up
+    _tempPoints = [];
+    _currentDrawingId = null;
   }
 }
 

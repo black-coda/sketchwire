@@ -1,10 +1,13 @@
 import 'dart:developer' show log;
 
+import 'package:rough_flutter/rough_flutter.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import 'package:sketchy_design_lang/sketchy_design_lang.dart';
 import '../state/canvas_state.dart';
+import '../theme/theme_config_state_notifier.dart';
 import 'resizeable_element.dart';
 
 class ElementRenderer extends ConsumerStatefulWidget {
@@ -118,9 +121,8 @@ class _ElementRendererState extends ConsumerState<ElementRenderer> {
               width: widget.element.size?.width ?? 100,
               height: widget.element.size?.height ?? 100,
               strokeColor: theme.inkColor,
-              fillColor: theme.paperColor,
-              createPrimitive: () =>
-                  SketchyPrimitive.rectangle(fill: SketchyFill.hachure),
+
+              createPrimitive: () => SketchyPrimitive.rectangle(),
               child: const SizedBox(),
             );
           },
@@ -151,10 +153,25 @@ class _ElementRendererState extends ConsumerState<ElementRenderer> {
               height: widget.element.size?.height ?? 100,
               strokeColor: theme.inkColor,
               fillColor: theme.paperColor,
-
-              createPrimitive: () =>
-                  SketchyPrimitive.circle(fill: SketchyFill.hachure),
+              createPrimitive: () => SketchyPrimitive.circle(),
               child: const SizedBox(),
+            );
+          },
+        );
+        break;
+      case SketchElementType.freehand:
+        child = SketchyTheme.consumer(
+          builder: (context, theme) {
+            return SizedBox(
+              width: widget.element.size?.width,
+              height: widget.element.size?.height,
+              child: CustomPaint(
+                painter: FreehandPainter(
+                  points: widget.element.points ?? [],
+                  color: theme.inkColor,
+                  ref: ref,
+                ),
+              ),
             );
           },
         );
@@ -169,5 +186,52 @@ class _ElementRendererState extends ConsumerState<ElementRenderer> {
     }
 
     return child;
+  }
+}
+
+class FreehandPainter extends CustomPainter {
+  final List<Offset> points;
+  final Color color;
+  final WidgetRef ref;
+
+  FreehandPainter({
+    required this.points,
+    required this.color,
+    required this.ref,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+
+    final generator = Generator(
+      DrawConfig.build(
+        roughness: ref.watch(sketchWireThemeConfigProvider).themeData.roughness,
+        curveStepCount: 3,
+      ),
+      HachureFiller(),
+    );
+
+    // Convert Offset to Point
+    final roughPoints = points.map((p) => PointD(p.dx, p.dy)).toList();
+
+    // Create drawable
+    final drawable = generator.curvePath(roughPoints);
+
+    // Draw
+    canvas.drawRough(
+      drawable,
+      Paint()
+        ..color = color
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+      Paint()..color = Colors.transparent,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant FreehandPainter oldDelegate) {
+    return oldDelegate.points != points || oldDelegate.color != color;
   }
 }

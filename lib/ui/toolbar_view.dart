@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sketchy_design_lang/sketchy_design_lang.dart';
 
 import '../state/canvas_state.dart';
+import '../state/canvas_settings_state.dart';
 
-class ToolbarView extends StatefulWidget {
+class ToolbarView extends ConsumerStatefulWidget {
   const ToolbarView({super.key});
 
   @override
-  State<ToolbarView> createState() => _ToolbarViewState();
+  ConsumerState<ToolbarView> createState() => _ToolbarViewState();
 }
 
-class _ToolbarViewState extends State<ToolbarView> {
+class _ToolbarViewState extends ConsumerState<ToolbarView> {
   bool _isCollapsed = false;
 
   @override
@@ -23,6 +25,7 @@ class _ToolbarViewState extends State<ToolbarView> {
       child: SketchyTheme.consumer(
         builder: (context, theme) {
           return SketchyCard(
+            margin: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: .stretch,
               mainAxisAlignment: .center,
@@ -30,8 +33,11 @@ class _ToolbarViewState extends State<ToolbarView> {
                 Expanded(
                   child: ListView(
                     // separatorBuilder: (context, index)=> SizedBox(height: 20),
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     children: [
+                      _buildResetCanvasButton(),
+                      _buildDrawingToggle(ref),
+                      const SketchyDivider(),
                       _buildToolItem(
                         SketchElementType.text,
                         'Text',
@@ -114,6 +120,15 @@ class _ToolbarViewState extends State<ToolbarView> {
     );
   }
 
+  Widget _buildResetCanvasButton() {
+    return GestureDetector(
+      onTap:
+          // icon: Icon(LucideIcons.refreshCcw),
+          ref.read(canvasProvider.notifier).resetCanvas,
+      child: _buildToolContent("Reset", LucideIcons.circlePower),
+    );
+  }
+
   Widget _buildToolContent(String label, IconData icon) {
     if (_isCollapsed) {
       return Padding(
@@ -125,15 +140,45 @@ class _ToolbarViewState extends State<ToolbarView> {
       builder: (context, theme) {
         return Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Icon(icon),
-              const SizedBox(width: 12),
-              SketchyText(label, style: TextStyle(color: theme.inkColor)),
-            ],
+          child: SketchyTooltip(
+            message: label,
+            child: Row(
+              children: [
+                Icon(icon),
+                const SizedBox(width: 12),
+                SketchyText(label, style: TextStyle(color: theme.inkColor)),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDrawingToggle(WidgetRef ref) {
+    final settings = ref.watch(canvasSettingsProvider);
+    final isDrawing = settings.isDrawingMode;
+
+    return GestureDetector(
+      onTap: () {
+        ref.read(canvasSettingsProvider.notifier).toggleDrawingMode();
+      },
+      child: SketchyTheme.consumer(
+        builder: (context, theme) {
+          return Container(
+            child: Column(
+              mainAxisAlignment: .center,
+              mainAxisSize: .min,
+              children: [
+                _buildToolContent(
+                  'Free Sketch',
+                  isDrawing ? LucideIcons.pencil : LucideIcons.pencilLine,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
