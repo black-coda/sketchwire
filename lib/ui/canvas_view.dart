@@ -1,7 +1,8 @@
 import 'package:custom_mouse_cursor/custom_mouse_cursor.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../state/canvas_state.dart';
 import '../state/canvas_settings_state.dart';
 import 'element_renderer.dart';
@@ -17,27 +18,32 @@ class CanvasView extends ConsumerStatefulWidget {
 }
 
 class _CanvasViewState extends ConsumerState<CanvasView> {
+  CustomMouseCursor? iconCursor;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadIconCursor();
+  }
+
+  Future<void> _loadIconCursor() async {
+    iconCursor = await .icon(
+      LucideIcons.pencil,
+      size: 12,
+      hotX: 0,
+      hotY: 0,
+      color: Colors.deepPurpleAccent,
+    );
+    if (mounted) {
+      setState(() {}); // Rebuild to apply the new cursor
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final canvasState = ref.watch(canvasProvider);
     final notifier = ref.read(canvasProvider.notifier);
     final canvasSettings = ref.watch(canvasSettingsProvider);
-
-
-
-    CustomMouseCursor? iconCursor;
-    Future<void> _loadIconCursor() async {
-  iconCursor = await CustomMouseCursor.icon(Icons.star, size: 32, hotX: 16, hotY: 16);
-  setState(() {}); // Rebuild to apply the new cursor
-}
-
-@override
-void initState() {
-  super.initState();
-  _loadIconCursor();
-}
-
-
 
     return SketchyTheme.consumer(
       builder: (context, theme) {
@@ -60,7 +66,9 @@ void initState() {
           },
           builder: (context, candidateData, rejectedData) {
             return MouseRegion(
-              cursor: iconCursor ?? SystemMouseCursors.basic,
+              cursor: canvasSettings.isDrawingMode
+                  ? (iconCursor ?? SystemMouseCursors.basic)
+                  : SystemMouseCursors.basic,
               child: GestureDetector(
                 onTap: () {
                   // Deselect when clicking on empty space
@@ -110,49 +118,50 @@ void initState() {
 
                       // Elements
                       ...canvasState.elements.map((element) {
-                        final isSelected =
-                            canvasState.selectedElementId == element.id;
                         return Positioned(
                           key: ValueKey(element.id),
-                          left: element.position.dx - (isSelected ? 12.0 : 0),
-                          top: element.position.dy - (isSelected ? 12.0 : 0),
-                          child: IgnorePointer(
-                            ignoring: canvasSettings.isDrawingMode,
-                            child: GestureDetector(
-                              onTap: () {
-                                notifier.selectElement(element.id);
-                              },
-                              onPanUpdate: (details) {
-                                var newPosition =
-                                    element.position + details.delta;
-
-                                // Snap to grid if enabled
-                                if (canvasSettings.snapToGrid) {
-                                  final gridSize = canvasSettings.gridSize;
-                                  newPosition = Offset(
-                                    ((newPosition.dx / gridSize).round() *
-                                            gridSize)
-                                        .toDouble(),
-                                    ((newPosition.dy / gridSize).round() *
-                                            gridSize)
-                                        .toDouble(),
-                                  );
-                                }
-
-                                notifier.updateElementPosition(
-                                  element.id,
-                                  newPosition,
-                                );
-                                // Also select it while dragging
-                                if (canvasState.selectedElementId !=
-                                    element.id) {
+                          left: element.position.dx,
+                          top: element.position.dy,
+                          child: RepaintBoundary(
+                            child: IgnorePointer(
+                              ignoring: canvasSettings.isDrawingMode,
+                              child: GestureDetector(
+                                onTap: () {
                                   notifier.selectElement(element.id);
-                                }
-                              },
-                              child: ElementRenderer(
-                                element: element,
-                                isSelected:
-                                    canvasState.selectedElementId == element.id,
+                                },
+                                onPanUpdate: (details) {
+                                  var newPosition =
+                                      element.position + details.delta;
+
+                                  // Snap to grid if enabled
+                                  if (canvasSettings.snapToGrid) {
+                                    final gridSize = canvasSettings.gridSize;
+                                    newPosition = Offset(
+                                      ((newPosition.dx / gridSize).round() *
+                                              gridSize)
+                                          .toDouble(),
+                                      ((newPosition.dy / gridSize).round() *
+                                              gridSize)
+                                          .toDouble(),
+                                    );
+                                  }
+
+                                  notifier.updateElementPosition(
+                                    element.id,
+                                    newPosition,
+                                  );
+                                  // Also select it while dragging
+                                  if (canvasState.selectedElementId !=
+                                      element.id) {
+                                    notifier.selectElement(element.id);
+                                  }
+                                },
+                                child: ElementRenderer(
+                                  element: element,
+                                  isSelected:
+                                      canvasState.selectedElementId ==
+                                      element.id,
+                                ),
                               ),
                             ),
                           ),

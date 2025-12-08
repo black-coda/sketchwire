@@ -125,6 +125,9 @@ class CanvasNotifier extends Notifier<CanvasState> {
   List<Offset> _tempPoints = [];
   String? _currentDrawingId;
 
+  // Resize throttling
+  int _resizeUpdateCounter = 0;
+
   void resetCanvas() {
     state = CanvasState();
   }
@@ -212,6 +215,10 @@ class CanvasNotifier extends Notifier<CanvasState> {
 
   void updateElementSize(ResizeHandlePosition position, Offset delta) {
     if (state.selectedElementId == null) return;
+
+    // Throttle: only update every 3rd pointer move event
+    _resizeUpdateCounter++;
+    if (_resizeUpdateCounter % 3 != 0) return;
     final element = state.elements.firstWhere(
       (e) => e.id == state.selectedElementId!,
     );
@@ -278,11 +285,13 @@ class CanvasNotifier extends Notifier<CanvasState> {
   }
 
   void endResize() {
+    // Reset counter
+    _resizeUpdateCounter = 0;
     state = state.copyWith(selectedElementId: state.selectedElementId);
   }
 
   void startFreehand(Offset startPoint) {
-    if (state.selectedElementId == null) return;
+    // if (state.selectedElementId == null) return;
 
     final id = const Uuid().v4();
     _currentDrawingId = id;

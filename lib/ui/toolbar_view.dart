@@ -105,10 +105,16 @@ class _ToolbarViewState extends ConsumerState<ToolbarView> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon),
-                    const SizedBox(width: 12),
-                    SketchyText(label),
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: SketchyText(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),

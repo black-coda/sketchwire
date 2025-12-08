@@ -141,70 +141,73 @@ class ResizableElement extends ConsumerWidget {
     // This ensures they are within the hit test area.
     const handlePadding = 12.0;
 
-    return SizedBox(
-      width: size.width + (handlePadding * 2),
-      height: size.height + (handlePadding * 2),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: handlePadding,
-            left: handlePadding,
-            child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: child,
+    return MouseRegion(
+      cursor: SystemMouseCursors.grab,
+      child: SizedBox(
+        width: size.width + (handlePadding * 2),
+        height: size.height + (handlePadding * 2),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: handlePadding,
+              left: handlePadding,
+              child: SizedBox(
+                width: size.width,
+                height: size.height,
+                child: child,
+              ),
             ),
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.topLeft,
-            notifier: canvasNotifier,
-            top: 0,
-            left: 0,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.topRight,
-            notifier: canvasNotifier,
-            top: 0,
-            right: 0,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.bottomLeft,
-            notifier: canvasNotifier,
-            bottom: 0,
-            left: 0,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.bottomRight,
-            notifier: canvasNotifier,
-            bottom: 0,
-            right: 0,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.topCenter,
-            notifier: canvasNotifier,
-            top: 0,
-            left: (size.width + (handlePadding * 2)) / 2 - 6,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.bottomCenter,
-            notifier: canvasNotifier,
-            bottom: 0,
-            left: (size.width + (handlePadding * 2)) / 2 - 6,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.centerLeft,
-            notifier: canvasNotifier,
-            top: (size.height + (handlePadding * 2)) / 2 - 6,
-            left: 0,
-          ),
-          PositionResizeHandle(
-            position: ResizeHandlePosition.centerRight,
-            notifier: canvasNotifier,
-            top: (size.height + (handlePadding * 2)) / 2 - 6,
-            right: 0,
-          ),
-        ],
+            PositionResizeHandle(
+              position: ResizeHandlePosition.topLeft,
+              notifier: canvasNotifier,
+              top: 0,
+              left: 0,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.topRight,
+              notifier: canvasNotifier,
+              top: 0,
+              right: 0,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.bottomLeft,
+              notifier: canvasNotifier,
+              bottom: 0,
+              left: 0,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.bottomRight,
+              notifier: canvasNotifier,
+              bottom: 0,
+              right: 0,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.topCenter,
+              notifier: canvasNotifier,
+              top: 0,
+              left: (size.width + (handlePadding * 2)) / 2 - 6,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.bottomCenter,
+              notifier: canvasNotifier,
+              bottom: 0,
+              left: (size.width + (handlePadding * 2)) / 2 - 6,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.centerLeft,
+              notifier: canvasNotifier,
+              top: (size.height + (handlePadding * 2)) / 2 - 6,
+              left: 0,
+            ),
+            PositionResizeHandle(
+              position: ResizeHandlePosition.centerRight,
+              notifier: canvasNotifier,
+              top: (size.height + (handlePadding * 2)) / 2 - 6,
+              right: 0,
+            ),
+          ],
+        ),
       ),
     );
   }
