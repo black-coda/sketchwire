@@ -132,14 +132,12 @@ class _ElementRendererState extends ConsumerState<ElementRenderer> {
       case SketchElementType.image:
         child = SketchyTheme.consumer(
           builder: (context, theme) {
-            return Container(
+            return SketchySurface(
               width: widget.element.size?.width ?? 100,
               height: widget.element.size?.height ?? 100,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: theme.primaryColor,
-                ), // TODO: Make sketchy
-              ),
+              strokeColor: theme.inkColor,
+              fillColor: theme.paperColor,
+              createPrimitive: () => SketchyPrimitive.rectangle(),
               child: const Center(child: SketchyText('IMG')),
             );
           },

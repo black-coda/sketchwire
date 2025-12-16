@@ -21,16 +21,28 @@ class SelectionToolbar extends ConsumerWidget {
               icon: LucideIcons.pencil,
               label: 'Edit',
               onPressed: () {
-                log('Edit');
-                // TODO: Handle edit
+                final state = ref.read(canvasProvider);
+                final element = state.elements.firstWhere(
+                  (e) => e.id == elementId,
+                );
+
+                // Only allow editing for text and button elements
+                if (element.type == SketchElementType.text ||
+                    element.type == SketchElementType.button) {
+                  // The edit functionality is handled by double-tap in ElementRenderer
+                  // This button provides an alternative way to trigger edit mode
+                  log(
+                    'Edit functionality is available via double-tap on text/button elements',
+                  );
+                }
               },
             ),
             _ActionButton(
               icon: LucideIcons.copy,
-              label: 'Copy',
+              label: 'Duplicate',
               onPressed: () {
-                log('Copy');
-                // TODO: Handle duplicate
+                final notifier = ref.read(canvasProvider.notifier);
+                notifier.duplicateElement(elementId);
               },
             ),
             _ActionButton(

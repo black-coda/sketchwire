@@ -1,10 +1,6 @@
-import 'dart:developer' show log;
-
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:sketchy_design_lang/sketchy_design_lang.dart';
 
 import '../state/canvas_state.dart';
 
@@ -55,19 +51,6 @@ class ResizeHandle extends StatelessWidget {
     return MouseRegion(
       cursor: _getCursor(),
       child: Listener(
-        // behavior: HitTestBehavior.translucent,
-        // onPanStart: (details) {
-        //   log("onPanStart");
-        //   onDragStart();
-        // },
-        // onPanUpdate: (details) {
-        //   log("onPanUpdate");
-        //   onDragUpdate(details.delta);
-        // },
-        // onPanEnd: (details) {
-        //   log("onPanEnd");
-        //   onDragEnd();
-        // },
         onPointerDown: (_) => onDragStart(),
         onPointerMove: (event) => onDragUpdate(event.delta),
         onPointerUp: (_) => onDragEnd(),

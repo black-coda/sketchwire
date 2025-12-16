@@ -171,17 +171,15 @@ class _ToolbarViewState extends ConsumerState<ToolbarView> {
       },
       child: SketchyTheme.consumer(
         builder: (context, theme) {
-          return Container(
-            child: Column(
-              mainAxisAlignment: .center,
-              mainAxisSize: .min,
-              children: [
-                _buildToolContent(
-                  'Free Sketch',
-                  isDrawing ? LucideIcons.pencil : LucideIcons.pencilLine,
-                ),
-              ],
-            ),
+          return Column(
+            mainAxisAlignment: .center,
+            mainAxisSize: .min,
+            children: [
+              _buildToolContent(
+                'Free Sketch',
+                isDrawing ? LucideIcons.pencil : LucideIcons.pencilLine,
+              ),
+            ],
           );
         },
       ),

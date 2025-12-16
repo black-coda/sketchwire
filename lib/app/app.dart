@@ -6,7 +6,7 @@ import '../state/canvas_state.dart';
 import '../ui/canvas_view.dart';
 import '../ui/toolbar_view.dart';
 
-import '../ui/settings_view.dart';
+import '../ui/settings_dialog.dart';
 
 class SketchWireApp extends ConsumerStatefulWidget {
   const SketchWireApp({super.key});
@@ -24,8 +24,9 @@ class _SketchWireAppState extends ConsumerState<SketchWireApp> {
         actions: [
           SketchyButton(
             onPressed: () {
-              Navigator.of(context).push(
-                SketchyPageRoute(builder: (context) => const SettingsView()),
+              showDialog(
+                context: context,
+                builder: (context) => const SettingsDialog(),
               );
             },
             child: const Icon(LucideIcons.settings),
@@ -34,7 +35,7 @@ class _SketchWireAppState extends ConsumerState<SketchWireApp> {
             onPressed: () {
               final state = ref.read(canvasProvider);
               final jsonList = state.elements.map((e) => e.toJson()).toList();
-              print('Exported JSON: $jsonList');
+              debugPrint('Exported JSON: $jsonList');
               // In a real app, we would save to file or show a dialog
               showDialog(
                 context: context,

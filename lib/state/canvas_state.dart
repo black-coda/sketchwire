@@ -213,6 +213,22 @@ class CanvasNotifier extends Notifier<CanvasState> {
     );
   }
 
+  void duplicateElement(String id) {
+    final element = state.elements.firstWhere((e) => e.id == id);
+    final newId = const Uuid().v4();
+
+    // Create a copy with a new ID and offset position
+    final duplicatedElement = element.copyWith(
+      id: newId,
+      position: element.position + const Offset(20, 20),
+    );
+
+    state = CanvasState(
+      elements: [...state.elements, duplicatedElement],
+      selectedElementId: newId, // Auto-select the duplicated element
+    );
+  }
+
   void updateElementSize(ResizeHandlePosition position, Offset delta) {
     if (state.selectedElementId == null) return;
 
