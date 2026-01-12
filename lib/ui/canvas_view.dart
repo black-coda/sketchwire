@@ -33,7 +33,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
       size: 12,
       hotX: 0,
       hotY: 0,
-      color: Colors.deepPurpleAccent,
+      color: Colors.blueGrey,
     );
     if (mounted) {
       setState(() {}); // Rebuild to apply the new cursor
@@ -55,8 +55,7 @@ class _CanvasViewState extends ConsumerState<CanvasView> {
             if (event is KeyDownEvent ||
                 event.runtimeType.toString().contains('Down')) {
               // Delete or Backspace key
-              if (event.logicalKey == LogicalKeyboardKey.delete ||
-                  event.logicalKey == LogicalKeyboardKey.backspace) {
+              if (event.logicalKey == LogicalKeyboardKey.delete) {
                 if (canvasState.selectedElementId != null) {
                   notifier.removeElement(canvasState.selectedElementId!);
                   return KeyEventResult.handled;

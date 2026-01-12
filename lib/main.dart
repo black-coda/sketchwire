@@ -5,5 +5,4 @@ import 'app/app_entry.dart';
 
 void main() {
   runApp(ProviderScope(child: const SketchWireAppEntry()));
-  
 }
